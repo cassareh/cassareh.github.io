@@ -23,10 +23,10 @@
             padding: 15px;
             background-color: #121212;
             color: white;
-            overflow: hidden;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
             box-sizing: border-box;
         }
 
@@ -42,8 +42,7 @@
         }
 
         #clock {
-            font-size: 2.8rem;
-            /* Further reduced */
+            font-size: 4.2rem;
             font-weight: bold;
             margin: 0;
             line-height: 1;
@@ -61,8 +60,8 @@
             grid-template-columns: 3fr 2fr;
             gap: 15px;
             flex-grow: 1;
-            min-height: 0;
-            /* Allow grid items to shrink */
+            min-height: calc(100vh - 30px);
+            /* Fill viewport subtracting body padding */
         }
 
         .right-column {
@@ -188,7 +187,7 @@
         <div class="right-column">
             <div class="card">
                 <div class="iframe-container">
-                    <iframe src="http://192.168.6.168:8123/todo?entity_id=todo.costco"></iframe>
+                    <iframe src="http://192.168.6.168:8123/todo"></iframe>
                 </div>
             </div>
 
@@ -235,6 +234,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Deadspace for scrolling -->
+    <div style="height: 250px;"></div>
 
     <script>
         function updateClock() {
