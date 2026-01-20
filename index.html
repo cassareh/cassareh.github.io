@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Command Center</title>
+
+    <!-- <script src="https://unpkg.com/@ungap/custom-elements-builtin"></script> -->
+    <!-- <script type="module" src="https://unpkg.com/x-frame-bypass"></script> -->
+    <!-- <script src="x-frame-bypass.js" type="module"></script> -->
+    <script defer src="https://dagammla.gitlab.io/keep-silk-open/keep.js"></script>
+
+    <style>
+        html {
+            font-size: 16px;
+            /* Base scaling factor */
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #121212;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 0;
+        }
+
+        .left-column .card {
+            flex: 1;
+        }
+
+        #clock {
+            font-size: 4rem;
+            /* Scaled up */
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+
+        #greeting {
+            font-size: 1.5rem;
+            /* Scaled up */
+            color: #aaa;
+            margin: 5px 0 0 0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 15px;
+            flex-grow: 1;
+            min-height: 0;
+            /* Allow grid items to shrink */
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 0;
+        }
+
+        .right-column .card {
+            flex: 1;
+        }
+
+        .card {
+            background: #1e1e1e;
+            border-radius: 20px;
+            /* Chunkier corners */
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+
+        /* Scale iframes to make content larger */
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+            /* Reverted scaling back to original */
+            transform-origin: top left;
+        }
+
+        .calendar-dark {
+            filter: invert(0.92) hue-rotate(180deg) brightness(1.1) contrast(0.9);
+        }
+
+        #weather-content {
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .current-temp {
+            font-size: 3.5rem;
+            /* Scaled up */
+            font-weight: bold;
+        }
+
+        .weather-desc {
+            font-size: 1.5rem;
+            /* Scaled up */
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .high-low {
+            margin-top: 5px;
+            font-size: 1.2rem;
+            /* Scaled up */
+            color: #888;
+        }
+
+        .hourly-item {
+            flex: 0 0 auto;
+            text-align: center;
+            font-size: 1.1rem;
+            /* Scaled up */
+        }
+
+        .daily-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            /* Scaled up */
+            padding: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-grid">
+        <div class="left-column">
+            <div style="text-align: center; margin-bottom: 5px;">
+                <p id="clock">00:00</p>
+                <p id="greeting">Hello!</p>
+            </div>
+            <div class="card">
+                <div class="iframe-container">
+                    <iframe class="calendar-dark"
+                        src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FLos_Angeles&showPrint=0&mode=WEEK&src=ZmFtaWx5MDAxNzA3NTIyODc4MDE5MDQzNzNAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&color=%23009688"
+                        scrolling="no"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="card">
+                <div class="iframe-container">
+                    <iframe src="http://192.168.6.168:8123/todo?entity_id=todo.costco"></iframe>
+                </div>
+            </div>
+
+            <div class="card" id="weather-card">
+                <div id="weather-content">
+                    <!-- Current Weather -->
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div id="weather-loading">Loading weather...</div>
+                        <div id="weather-data" style="display: none;">
+                            <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                                <div id="weather-icon-container" style="width: 80px; height: 80px;"></div>
+                                <div id="current-temp" class="current-temp">--°</div>
+                            </div>
+                            <div id="weather-desc" class="weather-desc">--</div>
+                            <div id="high-low" class="high-low">
+                                H: <span id="temp-max">--</span>° L: <span id="temp-min">--</span>°
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hourly Forecast -->
+                    <div id="hourly-forecast"
+                        style="display: flex; justify-content: center; overflow-x: auto; gap: 15px; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid #333;">
+                        <!-- JS will populate this -->
+                    </div>
+
+                    <!-- Daily Forecast -->
+                    <div id="daily-forecast" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS will populate this -->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const rawHours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            const ampm = rawHours >= 12 ? 'PM' : 'AM';
+            const displayHours = rawHours % 12 || 12;
+
+            document.getElementById('clock').textContent = `${displayHours}:${minutes} ${ampm}`;
+
+            let message = "Good Evening";
+            if (rawHours < 12) message = "Good Morning";
+            else if (rawHours < 18) message = "Good Afternoon";
+            document.getElementById('greeting').textContent = message;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Native Wake Lock to keep the screen on
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(() => { });
+        }
+
+        // Weather Implementation
+        const weatherCodeMap = {
+            0: 'Clear sky',
+            1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+            45: 'Fog', 48: 'Depositing rime fog',
+            51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+            61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+            71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+            77: 'Snow grains',
+            80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+            85: 'Slight snow showers', 86: 'Heavy snow showers',
+            95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+        };
+
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        function getWeatherIcon(code) {
+            // Sun / Clear
+            if (code === 0 || code === 1) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #f6bf26;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+            }
+            // Cloudy / Partly Cloudy relative to code
+            if (code === 2 || code === 3) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #aaa;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`;
+            }
+            // Fog
+            if (code === 45 || code === 48) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #aaa;"><path d="M5 12h14"></path><path d="M5 17h14"></path><path d="M2 7h20"></path></svg>`;
+            }
+            // Drizzle / Rain
+            if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #4a90e2;"><line x1="16" y1="13" x2="16" y2="21"></line><line x1="8" y1="13" x2="8" y2="21"></line><line x1="12" y1="15" x2="12" y2="23"></line><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path></svg>`;
+            }
+            // Snow
+            if ([71, 73, 75, 77, 85, 86].includes(code)) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #fff;"><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line><path d="m20 16-4-4 4-4"></path><path d="m4 8 4 4-4 4"></path><path d="m16 4-4 4-4-4"></path><path d="m8 20 4-4 4 4"></path></svg>`;
+            }
+            // Thunderstorm
+            if ([95, 96, 99].includes(code)) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #f6bf26;"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="13 11 9 17 15 17 11 23"></polyline></svg>`;
+            }
+
+            // Default (Cloud)
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #aaa;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`;
+        }
+
+        async function fetchWeather() {
+            try {
+                // West Lake Sammamish, Bellevue, WA
+                const lat = 47.57;
+                const lon = -122.10;
+                // Added hourly and daily params
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`);
+
+                if (!response.ok) throw new Error('Weather data fetch failed');
+
+                const data = await response.json();
+                const current = data.current;
+                const daily = data.daily;
+                const hourly = data.hourly;
+
+                // 1. Current Weather
+                document.getElementById('current-temp').textContent = `${Math.round(current.temperature_2m)}°`;
+                document.getElementById('weather-desc').textContent = weatherCodeMap[current.weather_code] || 'Unknown';
+                document.getElementById('temp-max').textContent = Math.round(daily.temperature_2m_max[0]);
+                document.getElementById('temp-min').textContent = Math.round(daily.temperature_2m_min[0]);
+
+                // Set Icon
+                document.getElementById('weather-icon-container').innerHTML = getWeatherIcon(current.weather_code);
+
+                document.getElementById('weather-loading').style.display = 'none';
+                document.getElementById('weather-data').style.display = 'block';
+
+                // 2. Hourly Forecast (Next 8 Hours)
+                const hourlyContainer = document.getElementById('hourly-forecast');
+                hourlyContainer.innerHTML = ''; // Clear previous
+
+                const currentHour = new Date().getHours();
+                let addedHours = 0;
+
+                for (let i = 0; i < hourly.time.length && addedHours < 8; i++) {
+                    const time = new Date(hourly.time[i]);
+                    const hour = time.getHours();
+
+                    // Start from next hour
+                    if (time <= new Date()) continue;
+
+                    const temp = Math.round(hourly.temperature_2m[i]);
+                    const code = hourly.weather_code[i]; // You could map this to an icon if you had them
+
+                    const el = document.createElement('div');
+                    el.className = 'hourly-item';
+
+                    // Simple logic to show e.g. "2 PM"
+                    const hourDisplay = hour === 0 ? '12 AM' : (hour > 12 ? `${hour - 12} PM` : `${hour} AM`);
+
+                    el.innerHTML = `
+                        <div style="color: #aaa; margin-bottom: 2px;">${hourDisplay}</div>
+                        <div style="font-weight: bold;">${temp}°</div>
+                    `;
+                    hourlyContainer.appendChild(el);
+                    addedHours++;
+                }
+
+                // 3. Daily Forecast (Next 5 Days)
+                const dailyContainer = document.getElementById('daily-forecast');
+                dailyContainer.innerHTML = ''; // Clear previous
+
+                // Start from index 1 (tomorrow) to 5
+                for (let i = 1; i <= 5 && i < daily.time.length; i++) {
+                    const date = new Date(daily.time[i]); // Note: time is YYYY-MM-DD string, might parse as UTC
+                    // Better to parse manually to avoid timezone issues with string dates
+                    const parts = daily.time[i].split('-'); // [YYYY, MM, DD]
+                    // Create date object treating it as local time (simplification)
+                    const dayName = dayNames[new Date(parts[0], parts[1] - 1, parts[2]).getDay()];
+
+                    const max = Math.round(daily.temperature_2m_max[i]);
+                    const min = Math.round(daily.temperature_2m_min[i]);
+                    const desc = weatherCodeMap[daily.weather_code[i]] || '';
+
+                    const el = document.createElement('div');
+                    el.className = 'daily-item';
+
+                    el.innerHTML = `
+                        <div style="width: 70px; font-weight: bold;">${dayName}</div>
+                        <div style="flex: 1; text-align: left; color: #aaa; padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${desc}</div>
+                        <div style="width: 100px; text-align: right;">${max}° / ${min}°</div>
+                    `;
+                    dailyContainer.appendChild(el);
+                }
+
+            } catch (error) {
+                console.error("Error fetching weather:", error);
+                document.getElementById('weather-loading').textContent = "Weather unavailable";
+            }
+        }
+
+        // Fetch immediately and then every 30 minutes
+        fetchWeather();
+        setInterval(fetchWeather, 30 * 60 * 1000);
+    </script>
+</body>
+
+</html>
